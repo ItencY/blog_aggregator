@@ -1,11 +1,16 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/itency/blog_aggregator/internal/config"
+	"github.com/itency/blog_aggregator/internal/database"
+	_ "github.com/lib/pq"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -14,6 +19,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error reading config: %v", err)
 	}
+
+	db, err := sql.Open("postgres", cfg.DBConnection)
+	if err != nil {
+		fmt.Printf("%v\n", err)
+	}
+
+	dbQueries := database.New(db)
 
 	// Step 2: Store the config in a new State instance
 
