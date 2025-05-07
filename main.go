@@ -9,8 +9,6 @@ import (
 	"github.com/itency/blog_aggregator/internal/config"
 	"github.com/itency/blog_aggregator/internal/database"
 	_ "github.com/lib/pq"
-
-	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -20,30 +18,33 @@ func main() {
 		log.Fatalf("Error reading config: %v", err)
 	}
 
+	// Step 2: Connection DB
 	db, err := sql.Open("postgres", cfg.DBConnection)
 	if err != nil {
 		fmt.Printf("%v\n", err)
 	}
 
+	// Step 3: Create new *database.Queries
 	dbQueries := database.New(db)
 
-	// Step 2: Store the config in a new State instance
+	// Step 3: Store the config in a new State instance
 
 	state := &State{
 		cfg: &cfg,
+		db:  dbQueries,
 	}
 
-	// Step 3: Create new instance commands with an initialized map of handler functions
+	// Step 4: Create new instance commands with an initialized map of handler functions
 	commands := Commands{validCommands: make(map[string]func(*State, Command) error)}
 	commands.register("login", handlerLogin)
 
-	// Step 4: Check the command-line arguments passed in by the user
+	// Step 5: Check the command-line arguments passed in by the user
 	if len(os.Args) < 2 {
 		fmt.Println("error: no command passed")
 		os.Exit(1)
 	}
 
-	// Step 5: Split the command-line arguments into the command name and the arguments slice to create a command instance
+	// Step 6: Split the command-line arguments into the command name and the arguments slice to create a command instance
 	var cmdArgs []string
 	if len(os.Args) == 2 {
 		cmdArgs = []string{}
@@ -57,12 +58,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Step 6: Read the config file again
+	// Step 7: Read the config file again
 	updateCfg, err := config.Read()
 	if err != nil {
 		log.Fatalf("Error reading updated config: %v", err)
 	}
 
-	// Step 4: Print the config
+	// Step 8: Print the config
 	fmt.Printf("Updated Config:\nDB URL: %s\nCurrent User: %s\n", updateCfg.DBConnection, updateCfg.UserName)
 }
