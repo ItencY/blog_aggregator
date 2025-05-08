@@ -37,6 +37,7 @@ func main() {
 	// Step 4: Create new instance commands with an initialized map of handler functions
 	commands := Commands{validCommands: make(map[string]func(*State, Command) error)}
 	commands.register("login", handlerLogin)
+	commands.register("register", handlerRegister)
 
 	// Step 5: Check the command-line arguments passed in by the user
 	if len(os.Args) < 2 {
