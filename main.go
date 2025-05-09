@@ -38,6 +38,7 @@ func main() {
 	commands := Commands{validCommands: make(map[string]func(*State, Command) error)}
 	commands.register("login", handlerLogin)
 	commands.register("register", handlerRegister)
+	commands.register("reset", handlerReset)
 
 	// Step 5: Check the command-line arguments passed in by the user
 	if len(os.Args) < 2 {
