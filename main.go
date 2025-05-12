@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"os"
 
@@ -11,64 +10,50 @@ import (
 	_ "github.com/lib/pq"
 )
 
+type state struct {
+	db  *database.Queries
+	cfg *config.Config
+}
+
 func main() {
-	// Step 1: Read the config file
 	cfg, err := config.Read()
 	if err != nil {
-		log.Fatalf("Error reading config: %v", err)
+		log.Fatalf("error reading config: %v", err)
 	}
 
-	// Step 2: Connection DB
-	db, err := sql.Open("postgres", cfg.DBConnection)
+	db, err := sql.Open("postgres", cfg.DBURL)
 	if err != nil {
-		fmt.Printf("%v\n", err)
+		log.Fatalf("error connecting to db: %v", err)
 	}
-
-	// Step 3: Create new *database.Queries
+	defer db.Close()
 	dbQueries := database.New(db)
 
-	// Step 3: Store the config in a new State instance
-
-	state := &State{
-		cfg: &cfg,
+	programState := &state{
 		db:  dbQueries,
+		cfg: &cfg,
 	}
 
-	// Step 4: Create new instance commands with an initialized map of handler functions
-	commands := Commands{validCommands: make(map[string]func(*State, Command) error)}
-	commands.register("login", handlerLogin)
-	commands.register("register", handlerRegister)
-	commands.register("reset", handlerReset)
-	commands.register("users", handlerGetUsers)
-	commands.register("agg", handlerAgg)
-	commands.register("addfeed", handlerAddFeed)
+	cmds := commands{
+		registeredCommands: make(map[string]func(*state, command) error),
+	}
+	cmds.register("login", handlerLogin)
+	cmds.register("register", handlerRegister)
+	cmds.register("reset", handlerReset)
+	cmds.register("users", handlerListUsers)
+	cmds.register("agg", handlerAgg)
+	cmds.register("addfeed", handlerAddFeed)
+	cmds.register("feeds", handlerListFeeds)
 
-	// Step 5: Check the command-line arguments passed in by the user
 	if len(os.Args) < 2 {
-		fmt.Println("error: no command passed")
-		os.Exit(1)
+		log.Fatal("Usage: cli <command> [args...]")
+		return
 	}
 
-	// Step 6: Split the command-line arguments into the command name and the arguments slice to create a command instance
-	var cmdArgs []string
-	if len(os.Args) == 2 {
-		cmdArgs = []string{}
-	} else {
-		cmdArgs = os.Args[2:]
-	}
+	cmdName := os.Args[1]
+	cmdArgs := os.Args[2:]
 
-	err = commands.run(state, Command{name: os.Args[1], args: cmdArgs})
+	err = cmds.run(programState, command{Name: cmdName, Args: cmdArgs})
 	if err != nil {
-		fmt.Printf("%v\n", err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
-
-	// Step 7: Read the config file again
-	updateCfg, err := config.Read()
-	if err != nil {
-		log.Fatalf("Error reading updated config: %v", err)
-	}
-
-	// Step 8: Print the config
-	fmt.Printf("Updated Config:\nDB URL: %s\nCurrent User: %s\n", updateCfg.DBConnection, updateCfg.UserName)
 }

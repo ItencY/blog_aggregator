@@ -29,7 +29,6 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	httpClient := http.Client{
 		Timeout: 10 * time.Second,
 	}
-
 	req, err := http.NewRequestWithContext(ctx, "GET", feedURL, nil)
 	if err != nil {
 		return nil, err
