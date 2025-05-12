@@ -41,6 +41,7 @@ func main() {
 	commands.register("reset", handlerReset)
 	commands.register("users", handlerGetUsers)
 	commands.register("agg", handlerAgg)
+	commands.register("addfeed", handlerAddFeed)
 
 	// Step 5: Check the command-line arguments passed in by the user
 	if len(os.Args) < 2 {
